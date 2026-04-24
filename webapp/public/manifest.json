@@ -1,0 +1,17 @@
+{
+  "name": "CivicConnect - AI Citizen Reporting",
+  "short_name": "CivicConnect",
+  "description": "Progressive Web App for instantly reporting civic issues directly to local authorities.",
+  "theme_color": "#0b0f19",
+  "background_color": "#0b0f19",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
