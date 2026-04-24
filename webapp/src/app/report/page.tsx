@@ -7,6 +7,7 @@ import { Loader2, CheckCircle2, Navigation, Mail } from 'lucide-react';
 export default function ReportPage() {
     const [analyzing, setAnalyzing] = useState(false);
     const [searching, setSearching] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [result, setResult] = useState<any>(null);
 
     const handleMediaCaptured = async (data: { imageUrl: string, location: {lat: number, lng: number}, timestamp: string }) => {

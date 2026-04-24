@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import CopyDetails from '@/components/CopyDetails';

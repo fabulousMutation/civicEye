@@ -15,7 +15,7 @@ export async function POST(req: Request) {
         // 2. Search API Integration (Tavily)
         const searchQuery = `${city} ${state} ${zip} report ${issueType} department official contact email phone number`;
         
-        let authorityContact = {
+        const authorityContact = {
             email: 'contact@localgov.org', // Default fallback
             phone: '555-0192',
             department: `${city} ${issueType} Management Dept`
@@ -60,8 +60,9 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, contact: authorityContact, geocode: { city, state } });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Authority Scraper Route Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }

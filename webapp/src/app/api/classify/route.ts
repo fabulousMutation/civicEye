@@ -94,7 +94,7 @@ Your output must EXACTLY match the following structure:
     let classification;
     try {
       classification = JSON.parse(rawContent);
-    } catch (parseError) {
+    } catch {
       console.error('JSON parsing failed for AI response:', rawContent);
       throw new Error('AI Vision returned an invalid JSON classification.');
     }
@@ -136,10 +136,11 @@ Your output must EXACTLY match the following structure:
       report: dbData
     }, { status: 201 });
 
-  } catch (error: any) {
-    console.error('Classify Route Exception:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected internal error occurred.';
+    console.error('Classify Route Exception:', errorMessage);
     return NextResponse.json(
-      { success: false, error: error.message || 'An unexpected internal error occurred.' },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }

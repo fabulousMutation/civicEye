@@ -1,9 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Camera, MapPin, UploadCloud, Loader2 } from 'lucide-react';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function MediaCapture({ onMediaCaptured }: { onMediaCaptured: (data: any) => void }) {
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export default function MediaCapture({ onMediaCaptured }: { onMediaCaptured: (da
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
             }
-        } catch (err) {
+        } catch {
             setError("Camera access denied or unavailable.");
             setShowCamera(false);
         }
@@ -102,8 +104,8 @@ export default function MediaCapture({ onMediaCaptured }: { onMediaCaptured: (da
                 timestamp: new Date().toISOString()
             });
 
-        } catch (error: any) {
-            setError(error.message || "Failed to upload image.");
+        } catch (error: unknown) {
+            setError(error instanceof Error ? error.message : "Failed to upload image.");
         } finally {
             setIsUploading(false);
         }
