@@ -42,7 +42,7 @@ export default async function HomePage() {
                             <Link href="/register" className="primary-action h-16 px-10 text-lg font-black w-full sm:w-auto">
                                 Start Reporting <ArrowRight className="w-5 h-5" />
                             </Link>
-                            <Link href="/login" className="h-16 px-10 flex items-center justify-center gap-2 bg-white border border-border rounded-2xl text-foreground font-bold text-lg hover:bg-secondary transition-all w-full sm:w-auto">
+                            <Link href="/login" className="h-16 px-10 flex items-center justify-center gap-2 bg-secondary border border-border rounded-2xl text-foreground font-bold text-lg hover:bg-muted transition-all w-full sm:w-auto">
                                 Sign In
                             </Link>
                         </div>
@@ -62,7 +62,7 @@ export default async function HomePage() {
                                 { icon: MapPin, title: "Locate", desc: "GPS automatically tags the precise location. No address typing needed." },
                                 { icon: Shield, title: "AI Routes", desc: "Vision AI classifies the issue and routes it to the correct municipal department." },
                             ].map((feature, i) => (
-                                <div key={i} className="p-8 bg-white border border-border rounded-3xl space-y-4 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all">
+                                <div key={i} className="p-8 bg-secondary border border-border rounded-3xl space-y-4 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all">
                                     <div className="w-14 h-14 bg-secondary rounded-2xl flex items-center justify-center">
                                         <feature.icon className="w-6 h-6 text-primary" />
                                     </div>
@@ -114,7 +114,7 @@ export default async function HomePage() {
                             <Link 
                                 key={report.id}
                                 href={`/track/${report.tracking_id}`}
-                                className="group flex items-center gap-4 p-5 bg-white border border-border rounded-3xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
+                                className="group flex items-center gap-4 p-5 bg-secondary border border-border rounded-3xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
                             >
                                 {report.image_url ? (
                                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-secondary shrink-0 border border-border">

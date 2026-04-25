@@ -36,7 +36,7 @@ export default async function ProfilePage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-background">
       <ProfileDashboard profile={profile || { id: user.id, full_name: user?.user_metadata?.full_name || "User", role: "citizen", avatar_url: null }} reports={reports || []} />
     </div>
   );

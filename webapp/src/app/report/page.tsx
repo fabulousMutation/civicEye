@@ -15,7 +15,6 @@ export default function ReportPage() {
         setAnalyzing(true);
         
         try {
-            // Task 3 Integration: Call Next.js Server API
             const response = await fetch('/api/classify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -42,7 +41,6 @@ export default function ReportPage() {
 
             setSearching(true);
             
-            // Advance to searching for the required authority
             const authResponse = await fetch('/api/authority', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -74,11 +72,11 @@ export default function ReportPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 relative">
+        <main className="min-h-screen bg-background py-12 px-4 sm:px-6 relative">
             <div className="max-w-3xl mx-auto space-y-8 relative z-10">
                 <div className="text-center">
-                    <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Report a Civic Issue</h1>
-                    <p className="mt-3 text-lg text-gray-500 max-w-xl mx-auto">Capture the evidence and our advanced Vision AI will automatically extract context, assign priority, and route it to the proper authority.</p>
+                    <h1 className="text-4xl font-extrabold text-foreground tracking-tight">Report a Civic Issue</h1>
+                    <p className="mt-3 text-lg text-muted-foreground max-w-xl mx-auto">Capture the evidence and our advanced Vision AI will automatically extract context, assign priority, and route it to the proper authority.</p>
                 </div>
 
                 {!analyzing && !searching && !result && (
@@ -86,26 +84,26 @@ export default function ReportPage() {
                 )}
 
                 {result && !result.is_rejected && (
-                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg mx-auto border text-center animate-in fade-in zoom-in duration-500">
-                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="bg-secondary p-8 rounded-2xl shadow-xl max-w-lg mx-auto border border-border text-center">
+                        <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle2 className="w-8 h-8" />
                         </div>
                         <h2 className="text-2xl font-bold mb-2">Report Submitted & Routed</h2>
-                        <p className="text-gray-600 mb-6">Your issue has been logged securely and assigned an authority.</p>
+                        <p className="text-muted-foreground mb-6">Your issue has been logged securely and assigned an authority.</p>
                         
-                        <div className="bg-gray-50 rounded-xl p-4 text-left space-y-3 mb-6">
-                            <p><strong>Tracking ID:</strong> <span className="font-mono text-blue-600">{result.tracing_id || result.tracking_id || result.report?.tracking_id}</span></p>
+                        <div className="bg-muted rounded-xl p-4 text-left space-y-3 mb-6">
+                            <p><strong>Tracking ID:</strong> <span className="font-mono text-primary">{result.tracing_id || result.tracking_id || result.report?.tracking_id}</span></p>
                             <p><strong>AI Classification:</strong> {result.classification?.issue_type || result.issue_type}</p>
                             <p><strong>Priority assigned:</strong> {result.classification?.priority || result.priority}</p>
                             <p className="line-clamp-2"><strong>Summary:</strong> {result.classification?.text_summary || result.text_summary}</p>
                             
                             {result.contact && (
-                                <div className="mt-4 pt-4 border-t border-gray-200">
-                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Routed Authority Contact</p>
-                                    <p className="font-bold text-gray-900">{result.contact.department}</p>
-                                    <p className="text-sm text-gray-600">{result.contact.email}</p>
+                                <div className="mt-4 pt-4 border-t border-border">
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Routed Authority Contact</p>
+                                    <p className="font-bold text-foreground">{result.contact.department}</p>
+                                    <p className="text-sm text-muted-foreground">{result.contact.email}</p>
                                     <div className="flex gap-2 mt-4">
-                                        <a href={`mailto:${result.contact.email}?subject=Civic Report: ${result.classification?.issue_type}&body=Tracking ID: ${result.tracing_id || result.report?.tracking_id}%0A%0A${result.classification?.text_summary}`} className="flex-1 inline-flex justify-center items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition">
+                                        <a href={`mailto:${result.contact.email}?subject=Civic Report: ${result.classification?.issue_type}&body=Tracking ID: ${result.tracing_id || result.report?.tracking_id}%0A%0A${result.classification?.text_summary}`} className="flex-1 inline-flex justify-center items-center px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-bold transition">
                                             <Mail className="w-4 h-4 mr-2" /> Email Directly
                                         </a>
                                     </div>
@@ -113,28 +111,28 @@ export default function ReportPage() {
                             )}
                         </div>
                         
-                        <button onClick={() => window.location.href = `/track/${result.tracing_id || result.report?.tracking_id || result.tracking_id}`} className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors">
+                        <button onClick={() => window.location.href = `/track/${result.tracing_id || result.report?.tracking_id || result.tracking_id}`} className="primary-action w-full">
                             Track Status Live
                         </button>
                     </div>
                 )}
 
                 {result && result.is_rejected && (
-                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg mx-auto border border-red-200 text-center animate-in fade-in zoom-in duration-500">
-                        <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                    <div className="bg-secondary p-8 rounded-2xl shadow-xl max-w-lg mx-auto border border-red-500/20 text-center">
+                        <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                             <AlertTriangle className="w-8 h-8" />
                         </div>
-                        <h2 className="text-2xl font-bold text-red-600 mb-3">Submission Rejected</h2>
+                        <h2 className="text-2xl font-bold text-red-500 mb-3">Submission Rejected</h2>
                         
-                        <div className="bg-red-50 text-red-900 border border-red-200 p-4 rounded-xl text-left mb-6 font-medium">
+                        <div className="bg-red-500/10 text-red-400 border border-red-500/20 p-4 rounded-xl text-left mb-6 font-medium">
                             {result.rejection_reason}
                         </div>
                         
-                        <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                        <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
                             Our AI gatekeeper determined this image does not depict a valid, physical civic issue. This submission has been halted and will not be routed to authorities.
                         </p>
 
-                        <button onClick={() => window.location.reload()} className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors">
+                        <button onClick={() => window.location.reload()} className="primary-action w-full">
                             Take Another Photo
                         </button>
                     </div>
@@ -143,27 +141,27 @@ export default function ReportPage() {
 
             {/* AI Global Loading State */}
             {analyzing && (
-                <div className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center">
                     <div className="relative w-24 h-24 flex items-center justify-center mb-6">
-                        <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
-                        <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-pulse" />
+                        <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+                        <Loader2 className="w-8 h-8 text-primary animate-pulse" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AI Analyzing Evidence...</h2>
-                    <p className="text-gray-500 mt-2 font-medium">Extracting metadata, classifying severity, and mapping context.</p>
+                    <h2 className="text-2xl font-bold text-foreground">AI Analyzing Evidence...</h2>
+                    <p className="text-muted-foreground mt-2 font-medium">Extracting metadata, classifying severity, and mapping context.</p>
                 </div>
             )}
 
             {/* Search Authority Loading State */}
             {searching && (
-                <div className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center">
                     <div className="relative w-24 h-24 flex items-center justify-center mb-6">
-                        <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
-                        <div className="absolute inset-0 border-4 border-indigo-600 rounded-full border-b-transparent animate-spin"></div>
-                        <Navigation className="w-8 h-8 text-indigo-600 animate-pulse" />
+                        <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-primary rounded-full border-b-transparent animate-spin"></div>
+                        <Navigation className="w-8 h-8 text-primary animate-pulse" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Finding Local Authority...</h2>
-                    <p className="text-gray-500 mt-2 font-medium">Scraping directory for correct civic department match.</p>
+                    <h2 className="text-2xl font-bold text-foreground">Finding Local Authority...</h2>
+                    <p className="text-muted-foreground mt-2 font-medium">Scraping directory for correct civic department match.</p>
                 </div>
             )}
         </main>

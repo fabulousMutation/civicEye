@@ -120,7 +120,7 @@ export default function AuthLoginForm() {
       <button
         onClick={handleMagicLink}
         disabled={loading}
-        className="w-full h-14 flex items-center justify-center gap-2 bg-white border border-border rounded-2xl text-foreground font-bold text-sm hover:bg-secondary transition-all disabled:opacity-50"
+        className="w-full h-14 flex items-center justify-center gap-2 bg-secondary border border-border rounded-2xl text-foreground font-bold text-sm hover:bg-muted transition-all disabled:opacity-50"
       >
         <Sparkles className="w-4 h-4 text-primary" />
         Send Magic Link

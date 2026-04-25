@@ -108,7 +108,7 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
                 <button 
                     key={report.id}
                     onClick={() => router.push(`/track/${report.tracking_id}`)}
-                    className="w-full group flex items-center gap-4 p-5 bg-white border border-border rounded-3xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all text-left"
+                    className="w-full group flex items-center gap-4 p-5 bg-secondary border border-border rounded-3xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all text-left"
                 >
                     <div className="w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center shrink-0">
                         <MapPin className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />

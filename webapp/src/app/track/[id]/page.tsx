@@ -19,7 +19,7 @@ export default async function TrackPage(props: { params: Promise<{ id: string }>
     if (error || !report) {
         return (
             <main className="min-h-screen flex items-center justify-center bg-muted p-6">
-                <div className="text-center p-12 bg-white rounded-[2rem] shadow-2xl max-w-md w-full border border-border">
+                <div className="text-center p-12 bg-secondary rounded-[2rem] shadow-2xl max-w-md w-full border border-border">
                     <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6" />
                     <h1 className="text-3xl font-black mb-3">Not Found</h1>
                     <p className="text-muted-foreground mb-8">Tracking ID <span className="font-mono text-foreground font-bold">{id}</span> does not exist.</p>
@@ -70,12 +70,12 @@ export default async function TrackPage(props: { params: Promise<{ id: string }>
 
                 <div className="space-y-12">
                     {report.status === 'REJECTED' ? (
-                        <div className="bg-red-50 border border-red-100 rounded-3xl p-8 space-y-4">
-                            <div className="flex items-center gap-3 text-red-600">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-8 space-y-4">
+                            <div className="flex items-center gap-3 text-red-500">
                                 <ShieldAlert className="w-6 h-6 font-bold" />
                                 <h3 className="text-lg font-black uppercase tracking-wider">Submission Rejected</h3>
                             </div>
-                            <p className="text-red-900 leading-relaxed font-medium">
+                            <p className="text-red-400 leading-relaxed font-medium">
                                 {report.rejection_reason || report.text_summary}
                             </p>
                         </div>

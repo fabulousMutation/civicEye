@@ -105,7 +105,7 @@ export default function MediaCapture({ onMediaCaptured }: { onMediaCaptured: (da
                             <button onClick={startCamera} className="primary-action flex-1">
                                 <Camera className="w-5 h-5" /> Open Camera
                             </button>
-                            <label className="flex-1 h-12 flex items-center justify-center bg-white border border-border rounded-2xl cursor-pointer hover:bg-secondary transition-colors font-medium text-sm">
+                            <label className="flex-1 h-12 flex items-center justify-center bg-secondary border border-border rounded-2xl cursor-pointer hover:bg-muted transition-colors font-medium text-sm">
                                 <UploadCloud className="w-4 h-4 mr-2" /> Upload
                                 <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
                             </label>
@@ -144,7 +144,7 @@ export default function MediaCapture({ onMediaCaptured }: { onMediaCaptured: (da
                     <button 
                         onClick={getLocation} 
                         className={`w-full py-4 px-6 rounded-2xl flex items-center justify-between border shadow-xl transition-all ${
-                            location ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white/90 backdrop-blur-md border-white/50 text-foreground'
+                            location ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-400' : 'bg-secondary/90 backdrop-blur-md border-border text-foreground'
                         }`}
                     >
                         <div className="flex items-center gap-3 font-semibold">

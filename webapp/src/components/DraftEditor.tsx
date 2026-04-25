@@ -61,7 +61,7 @@ export default function DraftEditor({ report, authorityDept, authorityEmail }: {
             {/* Draft Section */}
             <div className="space-y-4">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Report Summary</h3>
-                <div className={`${isPending ? 'bg-white' : 'bg-secondary/30'} rounded-3xl p-6 transition-all`}>
+                <div className={`${isPending ? 'bg-secondary' : 'bg-secondary/30'} rounded-3xl p-6 transition-all`}>
                     {isPending ? (
                         <textarea 
                             className="w-full text-lg leading-relaxed font-medium bg-transparent border-none focus:ring-0 p-0 min-h-[160px] resize-none placeholder:text-muted-foreground/50"
@@ -101,7 +101,7 @@ export default function DraftEditor({ report, authorityDept, authorityEmail }: {
             {/* Authority Card */}
             <div className="space-y-4">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Routing Information</h3>
-                <div className="flex items-center gap-5 p-6 bg-white border border-border rounded-3xl shadow-sm">
+                <div className="flex items-center gap-5 p-6 bg-secondary border border-border rounded-3xl shadow-sm">
                     <div className="w-14 h-14 bg-secondary rounded-2xl flex items-center justify-center">
                         <UserCheck className="w-6 h-6 text-primary" />
                     </div>
