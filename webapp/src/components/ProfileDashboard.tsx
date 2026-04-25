@@ -58,9 +58,14 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
           <h1 className="text-3xl font-black tracking-tight">Profile</h1>
           <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">{profile.role}</p>
         </div>
-        <button onClick={() => supabase.auth.signOut().then(() => router.push('/'))} className="text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">
+
+        <button onClick={() => supabase.auth.signOut().then(() => { window.location.href = '/'; })} className="text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">
           Log Out
         </button>
+
+        {/* <button onClick={() => supabase.auth.signOut().then(() => router.push('/'))} className="text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">
+          Log Out
+        </button> */}
       </header>
 
       {/* Profile Form */}
