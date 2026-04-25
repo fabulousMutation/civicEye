@@ -2,7 +2,7 @@
 
 import MediaCapture from '@/components/MediaCapture';
 import { useState } from 'react';
-import { Loader2, CheckCircle2, Navigation, Mail } from 'lucide-react';
+import { Loader2, CheckCircle2, Navigation, Mail, AlertTriangle } from 'lucide-react';
 
 export default function ReportPage() {
     const [analyzing, setAnalyzing] = useState(false);
@@ -30,6 +30,16 @@ export default function ReportPage() {
             if(!response.ok) throw new Error(aiData.error || "AI Classification failed.");
             
             setAnalyzing(false);
+
+            if (aiData.is_rejected) {
+                setResult({
+                    is_rejected: true,
+                    rejection_reason: aiData.classification?.rejection_reason || "This is not a valid civic issue.",
+                    tracing_id: aiData.tracing_id || aiData.report?.tracking_id
+                });
+                return;
+            }
+
             setSearching(true);
             
             // Advance to searching for the required authority
@@ -75,7 +85,7 @@ export default function ReportPage() {
                     <MediaCapture onMediaCaptured={handleMediaCaptured} />
                 )}
 
-                {result && (
+                {result && !result.is_rejected && (
                     <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg mx-auto border text-center animate-in fade-in zoom-in duration-500">
                         <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle2 className="w-8 h-8" />
@@ -105,6 +115,27 @@ export default function ReportPage() {
                         
                         <button onClick={() => window.location.href = `/track/${result.tracing_id || result.report?.tracking_id || result.tracking_id}`} className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors">
                             Track Status Live
+                        </button>
+                    </div>
+                )}
+
+                {result && result.is_rejected && (
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg mx-auto border border-red-200 text-center animate-in fade-in zoom-in duration-500">
+                        <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                            <AlertTriangle className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-red-600 mb-3">Submission Rejected</h2>
+                        
+                        <div className="bg-red-50 text-red-900 border border-red-200 p-4 rounded-xl text-left mb-6 font-medium">
+                            {result.rejection_reason}
+                        </div>
+                        
+                        <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                            Our AI gatekeeper determined this image does not depict a valid, physical civic issue. This submission has been halted and will not be routed to authorities.
+                        </p>
+
+                        <button onClick={() => window.location.reload()} className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors">
+                            Take Another Photo
                         </button>
                     </div>
                 )}

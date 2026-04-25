@@ -3,7 +3,7 @@
 
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Camera, MapPin, UploadCloud, Loader2 } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, X, Check } from 'lucide-react';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function MediaCapture({ onMediaCaptured }: { onMediaCaptured: (data: any) => void }) {
@@ -23,7 +23,7 @@ export default function MediaCapture({ onMediaCaptured }: { onMediaCaptured: (da
                 videoRef.current.srcObject = stream;
             }
         } catch {
-            setError("Camera access denied or unavailable.");
+            setError("Camera access denied.");
             setShowCamera(false);
         }
     };
@@ -62,113 +62,122 @@ export default function MediaCapture({ onMediaCaptured }: { onMediaCaptured: (da
 
     const getLocation = () => {
         if (!navigator.geolocation) {
-            setError("Geolocation is not supported by your browser");
+            setError("Geolocation not supported.");
             return;
         }
         navigator.geolocation.getCurrentPosition((position) => {
-            setLocation({
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            });
+            setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
             setError("");
         }, () => {
-            setError("Unable to retrieve your location. Please allow location permissions.");
+            setError("Location permissions required for reporting.");
         });
     };
 
     const handleSubmit = async () => {
-        if (!file) return setError("Please capture or upload an image.");
-        if (!location) return setError("Please allow location access to proceed.");
-        
+        if (!file || !location) return;
         setIsUploading(true);
-        setError("");
-
         try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
+            const fileName = `${Math.random()}.${file.name.split('.').pop()}`;
             const filePath = `reports/${fileName}`;
-
-            const { error: uploadError } = await supabase.storage
-                .from('images')
-                .upload(filePath, file);
-
+            const { error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
             if (uploadError) throw uploadError;
-
-            const { data: publicUrlData } = supabase.storage
-                .from('images')
-                .getPublicUrl(filePath);
-
-            onMediaCaptured({
-                imageUrl: publicUrlData.publicUrl,
-                location,
-                timestamp: new Date().toISOString()
-            });
-
+            const { data: publicUrlData } = supabase.storage.from('images').getPublicUrl(filePath);
+            onMediaCaptured({ imageUrl: publicUrlData.publicUrl, location, timestamp: new Date().toISOString() });
         } catch (error: unknown) {
-            setError(error instanceof Error ? error.message : "Failed to upload image.");
+            setError(error instanceof Error ? error.message : "Upload failed.");
         } finally {
             setIsUploading(false);
         }
     };
 
     return (
-        <div className="flex flex-col gap-4 p-6 border rounded-xl bg-white shadow-sm w-full mx-auto">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">1. Capture Evidence</h2>
-            
-            {!previewUrl && !showCamera && (
-                <div className="flex gap-4 w-full">
-                    <button onClick={startCamera} className="shadow-md flex-1 flex flex-col items-center justify-center py-8 border border-gray-100 rounded-xl hover:bg-blue-50 text-blue-600 transition-all font-semibold">
-                        <Camera className="w-8 h-8 mb-2" />
-                        <span>Take Photo</span>
-                    </button>
-                    <label className="shadow-md flex-1 flex flex-col items-center justify-center py-8 border border-gray-100 rounded-xl hover:bg-blue-50 text-blue-600 cursor-pointer transition-all font-semibold">
-                        <UploadCloud className="w-8 h-8 mb-2" />
-                        <span>Upload Image</span>
-                        <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
-                    </label>
-                </div>
-            )}
+        <div className="relative w-full max-w-xl mx-auto h-[70vh] md:h-[600px] bg-secondary rounded-[2.5rem] overflow-hidden shadow-2xl border border-border">
+            {/* Main View Area */}
+            <div className="absolute inset-0 z-0">
+                {!previewUrl && !showCamera && (
+                    <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-6">
+                        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+                            <Camera className="w-10 h-10 text-primary" />
+                        </div>
+                        <h2 className="text-2xl font-bold tracking-tight">Capture Evidence</h2>
+                        <p className="text-muted-foreground text-sm max-w-xs">Take a clear photo of the civic issue to begin the automated report.</p>
+                        <div className="flex gap-4 w-full pt-4">
+                            <button onClick={startCamera} className="primary-action flex-1">
+                                <Camera className="w-5 h-5" /> Open Camera
+                            </button>
+                            <label className="flex-1 h-12 flex items-center justify-center bg-white border border-border rounded-2xl cursor-pointer hover:bg-secondary transition-colors font-medium text-sm">
+                                <UploadCloud className="w-4 h-4 mr-2" /> Upload
+                                <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+                            </label>
+                        </div>
+                    </div>
+                )}
 
-            {showCamera && (
-                <div className="relative rounded-xl overflow-hidden bg-black aspect-video w-full shadow-lg">
-                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                    <button onClick={capturePhoto} className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-blue-600 px-6 py-2 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">
-                        Capture
-                    </button>
-                    <button onClick={stopCamera} className="absolute top-4 right-4 bg-gray-900/50 text-white px-3 py-1 rounded-full text-sm">
-                        Cancel
-                    </button>
-                </div>
-            )}
+                {showCamera && (
+                    <div className="h-full relative bg-black">
+                        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                        <div className="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-12 px-8">
+                            <button onClick={stopCamera} className="w-12 h-12 flex items-center justify-center bg-white/20 backdrop-blur-md rounded-full text-white">
+                                <X className="w-6 h-6" />
+                            </button>
+                            <button onClick={capturePhoto} className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center p-1">
+                                <div className="w-full h-full bg-white rounded-full" />
+                            </button>
+                            <div className="w-12 h-12" /> {/* Spacer */}
+                        </div>
+                    </div>
+                )}
 
-            {previewUrl && (
-                <div className="relative rounded-xl overflow-hidden aspect-video border shadow-sm w-full">
-                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                    <button onClick={() => {setPreviewUrl(null); setFile(null);}} className="absolute top-3 right-3 bg-red-500/90 hover:bg-red-600 text-white rounded-full p-1 px-3 text-sm font-semibold shadow-md transition-colors">
-                        Remove
-                    </button>
-                </div>
-            )}
-
-            <div className="pt-6 border-t mt-2 w-full">
-                <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">2. Tag Location</h2>
-                <button onClick={getLocation} className="w-full flex items-center justify-center gap-2 p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 text-gray-700 font-medium shadow-sm transition-colors">
-                    <MapPin className="w-5 h-5 text-purple-500" />
-                    {location ? `Location Tagged (${location.lat.toFixed(4)}, ${location.lng.toFixed(4)})` : "Get Current Location"}
-                </button>
+                {previewUrl && (
+                    <div className="h-full relative">
+                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                        <button onClick={() => {setPreviewUrl(null); setFile(null);}} className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-full text-white">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {error && <p className="text-red-500 text-sm mt-2 font-medium bg-red-50 p-3 rounded-lg">{error}</p>}
+            {/* Floating Location Control */}
+            {previewUrl && (
+                <div className="absolute inset-x-6 bottom-32 z-10">
+                    <button 
+                        onClick={getLocation} 
+                        className={`w-full py-4 px-6 rounded-2xl flex items-center justify-between border shadow-xl transition-all ${
+                            location ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white/90 backdrop-blur-md border-white/50 text-foreground'
+                        }`}
+                    >
+                        <div className="flex items-center gap-3 font-semibold">
+                            <MapPin className={location ? "text-emerald-500" : "text-primary"} />
+                            <span>{location ? 'Location Secured' : 'Tag Location'}</span>
+                        </div>
+                        {location ? <Check className="w-5 h-5" /> : <div className="text-xs text-muted-foreground">Required</div>}
+                    </button>
+                </div>
+            )}
 
-            <button 
-                onClick={handleSubmit} 
-                disabled={isUploading || !file || !location}
-                className={`w-full p-4 rounded-xl font-bold text-white mt-4 flex items-center justify-center gap-2 shadow-md transition-all ${
-                    (isUploading || !file || !location) ? 'bg-blue-300 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:scale-[1.02]'
-                }`}
-            >
-                {isUploading ? <><Loader2 className="animate-spin" /> Uploading...</> : 'Continue to AI Analysis'}
-            </button>
+            {/* Final Action Button */}
+            {previewUrl && (
+                <div className="absolute inset-x-6 bottom-8 z-10">
+                    <button 
+                        onClick={handleSubmit} 
+                        disabled={isUploading || !location}
+                        className="primary-action w-full h-16 text-lg disabled:opacity-50 disabled:grayscale transition-all"
+                    >
+                        {isUploading ? <Loader2 className="animate-spin h-6 w-6" /> : "Continue to Analysis"}
+                    </button>
+                </div>
+            )}
+
+            {error && (
+                <div className="absolute top-6 left-6 right-6 z-20">
+                    <div className="bg-red-500 text-white px-4 py-3 rounded-xl text-sm font-medium shadow-lg flex items-center justify-between">
+                        <span>{error}</span>
+                        <X className="w-4 h-4 cursor-pointer" onClick={() => setError("")} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+

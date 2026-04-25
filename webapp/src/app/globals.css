@@ -3,25 +3,58 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 255 255 255;
+  --foreground: 17 24 39;
+  --primary: 0 102 255;
+  --primary-foreground: 255 255 255;
+  --secondary: 243 244 246;
+  --secondary-foreground: 17 24 39;
+  --muted: 249 250 251;
+  --muted-foreground: 107 114 128;
+  --border: 229 231 235;
+  --input: 229 231 235;
+  --ring: 0 102 255;
+  --radius: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0 0;
+    --foreground: 249 250 251;
+    --primary: 0 102 255;
+    --primary-foreground: 255 255 255;
+    --secondary: 17 24 39;
+    --secondary-foreground: 249 250 251;
+    --muted: 10 10 10;
+    --muted-foreground: 156 163 175;
+    --border: 31 41 55;
+    --input: 31 41 55;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  ::selection {
+    background-color: rgb(var(--primary) / 0.2);
+    color: rgb(var(--primary-foreground));
   }
 }
+
+@layer components {
+  .native-bottom-sheet {
+    @apply fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border rounded-t-[2rem] shadow-2xl transition-transform duration-300 ease-out;
+  }
+  
+  .glass-button {
+    @apply backdrop-blur-md bg-white/10 border border-white/20 shadow-lg transition-all active:scale-95;
+  }
+
+  .primary-action {
+    @apply bg-primary text-primary-foreground font-semibold h-12 px-6 rounded-2xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2;
+  }
+}
+

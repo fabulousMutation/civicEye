@@ -1,64 +1,80 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
     try {
-        const { reportId, lat, lng, issueType } = await req.json();
+        const { reportId, text_summary, additional_images = [] } = await req.json();
 
-        // 1. Reverse Geocode via OpenStreetMap Nominatim
-        const geocodeRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-        const geocodeData = await geocodeRes.json();
-        const city = geocodeData?.address?.city || geocodeData?.address?.town || geocodeData?.address?.village || 'Local';
-        const state = geocodeData?.address?.state || '';
-        const zip = geocodeData?.address?.postcode || '';
+        // 1. Fetch original report to get authority details and images
+        const { data: report, error: fetchError } = await supabase
+            .from('reports')
+            .select('image_url, issue_type, authority_contact_info')
+            .eq('tracking_id', reportId)
+            .single();
 
-        // 2. Search API Integration (Tavily)
-        const searchQuery = `${city} ${state} ${zip} report ${issueType} department official contact email phone number`;
-        
-        const authorityContact = {
+        if (fetchError || !report) throw new Error('Report not found');
+
+        const authorityContact = report.authority_contact_info || {
             email: 'contact@localgov.org', // Default fallback
-            phone: '555-0192',
-            department: `${city} ${issueType} Management Dept`
+            department: 'Local City Management Dept'
         };
+        const issueType = report.issue_type || 'Civic Issue';
 
-        if (process.env.SEARCH_API_KEY) {
-            const searchResponse = await fetch('https://api.tavily.com/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    api_key: process.env.SEARCH_API_KEY, 
-                    query: searchQuery, 
-                    search_depth: 'advanced' 
-                })
-            });
-
-            if (searchResponse.ok) {
-                const searchData = await searchResponse.json();
+        // 2. Send email via Resend
+        if (process.env.RESEND_API_KEY) {
+            try {
+                const destinationEmails = authorityContact.email ? [authorityContact.email] : [];
                 
-                // Aggressive RegEx parsing against all search results to scrape emails and phone numbers.
-                const textDump = JSON.stringify(searchData.results);
-                const emails = textDump.match(/[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+/gi);
-                const phones = textDump.match(/(\+\d{1,2}\s?)?1?\-?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/gi);
-
-                if (emails && emails.length > 0) authorityContact.email = emails[0];
-                if (phones && phones.length > 0) authorityContact.phone = phones[0];
-            } else {
-                console.warn("Tavily API responded with an error, using fallback authority contact.");
+                let extraImagesHtml = '';
+                if (additional_images.length > 0) {
+                    extraImagesHtml = `<br/><div style="margin-top: 15px;"><h3>Additional Evidence:</h3><div style="display: flex; gap: 10px; flex-wrap: wrap;">`;
+                    additional_images.forEach((img: string) => {
+                        extraImagesHtml += `<img src="${img}" alt="Extra Evidence" style="width: 200px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); object-fit: cover;" />`;
+                    });
+                    extraImagesHtml += `</div></div>`;
+                }
+                
+                if (destinationEmails.length > 0) {
+                    await resend.emails.send({
+                        from: 'CivicEye <onboarding@resend.dev>',
+                        to: destinationEmails,
+                        subject: `Urgent Civic Report: ${issueType} reported requires attention`,
+                        html: `
+                            <div style="font-family: sans-serif; padding: 20px;">
+                                <h2 style="color: #2563eb;">New Civic Issue Reported: ${issueType}</h2>
+                                <p><strong>Tracking ID:</strong> ${reportId}</p>
+                                <p><strong>Summary:</strong> ${text_summary || "No description provided."}</p>
+                                <br/>
+                                <div style="margin-top: 20px;">
+                                    <h3>Initial Evidence:</h3>
+                                    ${report.image_url ? `<img src="${report.image_url}" alt="Incident Evidence" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"/>` : '<p>No initial image provided.</p>'}
+                                </div>
+                                ${extraImagesHtml}
+                            </div>
+                        `
+                    });
+                }
+            } catch (err) {
+                console.error("Resend delivery failed:", err);
             }
         }
 
         // 3. Update Supabase Reference Object
-        const { error } = await supabase
+        const { error: updateError } = await supabase
             .from('reports')
             .update({ 
-                authority_contact_info: authorityContact,
-                status: 'Authority Esculated'
+                status: 'AUTHORITY_NOTIFIED',
+                text_summary,
+                additional_images
             })
             .eq('tracking_id', reportId);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
 
-        return NextResponse.json({ success: true, contact: authorityContact, geocode: { city, state } });
+        return NextResponse.json({ success: true, contact: authorityContact });
 
     } catch (error: unknown) {
         console.error("Authority Scraper Route Error:", error);
