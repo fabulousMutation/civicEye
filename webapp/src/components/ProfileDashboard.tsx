@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { LogOut, User, Loader2, Camera, Calendar, ArrowRight, ChevronRight, MapPin } from "lucide-react";
+import { User, Loader2, Camera, Calendar, ChevronRight, MapPin } from "lucide-react";
 import Image from "next/image";
 
 type Profile = { id: string; full_name: string; avatar_url: string | null; role: string; };
@@ -85,6 +85,11 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
                     className="w-full bg-transparent border-none focus:ring-0 px-6 py-4 font-bold text-lg"
                 />
             </div>
+            {msg.text && (
+                <div className={`p-3 rounded-2xl text-xs font-bold text-center ${msg.type === "error" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+                    {msg.text}
+                </div>
+            )}
             <button disabled={loading} type="submit" className="primary-action w-full h-14">
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save Settings"}
             </button>

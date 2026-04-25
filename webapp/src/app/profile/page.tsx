@@ -11,11 +11,11 @@ export const metadata = {
 };
 
 export default async function ProfilePage() {
-  const supabase = createClient();
+  const supabaseServer = createClient();
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabaseServer.auth.getUser();
 
   if (!user) {
     return redirect("/login");
