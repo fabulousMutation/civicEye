@@ -98,8 +98,9 @@ export default function AuthLoginForm() {
       setIsRateLimit(friendly.isRateLimit);
       setLoading(false);
     } else {
-      router.refresh();
-      router.push("/");
+      window.location.href = "/";
+      //router.refresh();
+      //router.push("/");
     }
   };
 
