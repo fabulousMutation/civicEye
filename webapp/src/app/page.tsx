@@ -4,6 +4,16 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Camera, MapPin, Radio, ArrowRight, ChevronRight, Shield } from 'lucide-react';
 
+function PriorityBadge({ priority }: { priority?: string }) {
+    if (!priority || priority === 'NONE') return null;
+    const color = priority === 'High' ? 'bg-red-500' : priority === 'Medium' ? 'bg-amber-500' : 'bg-emerald-500';
+    return (
+        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full text-white shrink-0 ${color}`}>
+            {priority}
+        </span>
+    );
+}
+
 export const revalidate = 0;
 
 export default async function HomePage() {
@@ -127,7 +137,10 @@ export default async function HomePage() {
                                 )}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-extrabold text-foreground truncate">{report.issue_type}</span>
+                                        <span className="font-extrabold text-foreground truncate">
+                                            {report.status === 'REJECTED' ? (report.rejection_title || 'Rejected Report') : report.issue_type}
+                                        </span>
+                                        <PriorityBadge priority={report.priority} />
                                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                             report.status === 'AUTHORITY_NOTIFIED' ? 'bg-emerald-500' :
                                             report.status === 'REJECTED' ? 'bg-red-500' : 'bg-primary'

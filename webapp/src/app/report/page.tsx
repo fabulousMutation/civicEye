@@ -33,6 +33,7 @@ export default function ReportPage() {
             if (aiData.is_rejected) {
                 setResult({
                     is_rejected: true,
+                    rejection_title: aiData.classification?.rejection_title || "Submission Rejected",
                     rejection_reason: aiData.classification?.rejection_reason || "This is not a valid civic issue.",
                     tracing_id: aiData.tracing_id || aiData.report?.tracking_id
                 });
@@ -122,7 +123,7 @@ export default function ReportPage() {
                         <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                             <AlertTriangle className="w-8 h-8" />
                         </div>
-                        <h2 className="text-2xl font-bold text-red-500 mb-3">Submission Rejected</h2>
+                        <h2 className="text-2xl font-bold text-red-500 mb-3">{result.rejection_title || "Submission Rejected"}</h2>
                         
                         <div className="bg-red-500/10 text-red-400 border border-red-500/20 p-4 rounded-xl text-left mb-6 font-medium">
                             {result.rejection_reason}

@@ -6,6 +6,16 @@ import DraftEditor from '@/components/DraftEditor';
 
 export const revalidate = 0;
 
+function PriorityBadge({ priority }: { priority?: string }) {
+    if (!priority || priority === 'NONE') return null;
+    const color = priority === 'High' ? 'bg-red-500' : priority === 'Medium' ? 'bg-amber-500' : 'bg-emerald-500';
+    return (
+        <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full text-white ${color}`}>
+            {priority} Priority
+        </span>
+    );
+}
+
 export default async function TrackPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const { id } = params;
@@ -44,14 +54,25 @@ export default async function TrackPage(props: { params: Promise<{ id: string }>
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Tracking Receipt</span>
                         <div className="flex items-center gap-1.5 px-3 py-1 bg-secondary rounded-full border border-border">
-                            <div className={`w-1.5 h-1.5 rounded-full ${report.status === 'REJECTED' ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                            <div className={`w-1.5 h-1.5 rounded-full ${report.status === 'REJECTED' ? 'bg-red-500' : report.status === 'AUTHORITY_NOTIFIED' ? 'bg-emerald-500' : 'bg-primary'}`} />
                             <span className="text-[10px] font-bold uppercase tracking-wider">{report.status.replace('_', ' ')}</span>
                         </div>
                     </div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-foreground">{report.issue_type}</h1>
-                    <div className="flex items-center gap-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
+                            {report.status === 'REJECTED' ? (report.rejection_title || 'Rejected Report') : (report.issue_type || 'Report')}
+                        </h1>
+                        <PriorityBadge priority={report.priority} />
+                    </div>
+                    <div className="flex items-center gap-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex-wrap">
                         <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {new Date(report.geotag_timestamp || report.created_at).toLocaleDateString()}</span>
-                        <span className="flex items-center gap-1.5"><MapPin className="w-3 h-3" /> {report.location_lat?.toFixed(3)}, {report.location_lng?.toFixed(3)}</span>
+                        <span className="flex items-center gap-1.5">
+                            <MapPin className="w-3 h-3" /> 
+                            {report.address 
+                                ? <span className="normal-case tracking-normal font-medium max-w-[300px] truncate">{report.address}</span>
+                                : `${report.location_lat?.toFixed(3)}, ${report.location_lng?.toFixed(3)}`
+                            }
+                        </span>
                     </div>
                 </header>
 
@@ -73,7 +94,9 @@ export default async function TrackPage(props: { params: Promise<{ id: string }>
                         <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-8 space-y-4">
                             <div className="flex items-center gap-3 text-red-500">
                                 <ShieldAlert className="w-6 h-6 font-bold" />
-                                <h3 className="text-lg font-black uppercase tracking-wider">Submission Rejected</h3>
+                                <h3 className="text-lg font-black uppercase tracking-wider">
+                                    {report.rejection_title || 'Submission Rejected'}
+                                </h3>
                             </div>
                             <p className="text-red-400 leading-relaxed font-medium">
                                 {report.rejection_reason || report.text_summary}
@@ -101,4 +124,3 @@ export default async function TrackPage(props: { params: Promise<{ id: string }>
         </main>
     );
 }
-

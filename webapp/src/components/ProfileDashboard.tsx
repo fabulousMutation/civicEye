@@ -3,32 +3,50 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { User, Loader2, Camera, Calendar, ChevronRight, MapPin } from "lucide-react";
+import { User, Loader2, Camera, Calendar, ChevronRight, MapPin, Pencil, X, Phone, Mail, LogOut } from "lucide-react";
 import Image from "next/image";
 
-type Profile = { id: string; full_name: string; avatar_url: string | null; role: string; };
-type Report = { id: string; tracking_id: string; issue_type: string; status: string; geotag_timestamp: string; created_at: string; image_url?: string; };
+type Profile = { id: string; full_name: string; avatar_url: string | null; role: string; phone?: string | null; };
+type Report = { id: string; tracking_id: string; issue_type: string; status: string; priority?: string; rejection_title?: string; geotag_timestamp: string; created_at: string; image_url?: string; };
 
-export default function ProfileDashboard({ profile, reports }: { profile: Profile; reports: Report[] }) {
+export default function ProfileDashboard({ profile, reports, email }: { profile: Profile; reports: Report[]; email: string }) {
   const router = useRouter();
   const supabase = createClient();
   const [fullName, setFullName] = useState(profile.full_name || "");
+  const [phone, setPhone] = useState(profile.phone || "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
+
+  // Stash originals for cancel
+  const [origName, setOrigName] = useState(profile.full_name || "");
+  const [origPhone, setOrigPhone] = useState(profile.phone || "");
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMsg({ type: "", text: "" });
-    const { error } = await supabase.from("profiles").update({ full_name: fullName }).eq("id", profile.id);
+    const { error } = await supabase.from("profiles").update({ full_name: fullName, phone }).eq("id", profile.id);
     if (error) setMsg({ type: "error", text: error.message });
     else {
         setMsg({ type: "success", text: "Profile updated" });
+        setOrigName(fullName);
+        setOrigPhone(phone);
+        setEditMode(false);
         router.refresh();
     }
     setLoading(false);
+  };
+
+  const handleCancel = () => {
+    setFullName(origName);
+    setPhone(origPhone);
+    setEditMode(false);
+    setMsg({ type: "", text: "" });
   };
 
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +68,15 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
     }
   };
 
+  const priorityColor = (p?: string) => {
+    switch (p?.toLowerCase()) {
+      case 'high': case 'critical': return 'bg-red-500';
+      case 'medium': return 'bg-amber-500';
+      case 'low': return 'bg-emerald-500';
+      default: return 'bg-primary';
+    }
+  };
+
   return (
     <div className="w-full max-w-xl mx-auto px-6 py-12 space-y-12">
       {/* Header */}
@@ -58,12 +85,50 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
           <h1 className="text-3xl font-black tracking-tight">Profile</h1>
           <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">{profile.role}</p>
         </div>
-        <button onClick={() => supabase.auth.signOut().then(() => router.push('/'))} className="text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">
-          Log Out
+        <button onClick={() => setShowLogoutModal(true)} className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors px-3 py-2 rounded-xl hover:bg-red-500/10">
+          <LogOut className="w-3.5 h-3.5" /> Log Out
         </button>
       </header>
 
-      {/* Profile Form */}
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLogoutModal(false)} />
+          <div className="relative bg-background border border-border rounded-3xl shadow-2xl p-8 max-w-sm w-full space-y-6 animate-in">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
+                <LogOut className="w-7 h-7 text-red-500" />
+              </div>
+              <h2 className="text-xl font-black tracking-tight">Sign Out?</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                You&apos;ll need to sign in again to access your reports and profile. Are you sure?
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 h-12 bg-secondary border border-border rounded-2xl font-bold text-sm hover:bg-muted transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setLoggingOut(true);
+                  await supabase.auth.signOut();
+                  router.push('/');
+                }}
+                disabled={loggingOut}
+                className="flex-1 h-12 bg-red-500 text-white rounded-2xl font-bold text-sm hover:bg-red-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                {loggingOut ? 'Signing out...' : 'Sign Out'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Section */}
       <section className="space-y-8">
         <div className="flex flex-col items-center">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-secondary border border-border group">
@@ -75,15 +140,67 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
             </div>
         </div>
 
-        <form onSubmit={handleUpdate} className="space-y-4">
-            <div className="bg-secondary rounded-[2rem] p-2">
+        {/* View / Edit Mode */}
+        {!editMode ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-6 bg-secondary rounded-3xl border border-border">
+              <div className="space-y-3 flex-1 min-w-0">
+                <div className="flex items-center gap-3">
+                  <User className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="font-bold text-lg text-foreground truncate">{fullName || "No name set"}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm text-muted-foreground truncate">{email}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm text-muted-foreground truncate">{phone || "No phone set"}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditMode(true)}
+                className="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full text-primary hover:bg-primary/20 transition-colors shrink-0 ml-4"
+                aria-label="Edit profile"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div className="bg-secondary rounded-3xl p-6 border border-primary/30 space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Edit Mode</span>
+                <button type="button" onClick={handleCancel} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-muted-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Full Name"
-                    className="w-full bg-transparent border-none focus:ring-0 px-6 py-4 font-bold text-lg"
+                    className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl pl-12 pr-6 py-4 font-bold text-base transition-all"
                 />
+              </div>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Phone Number"
+                    className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl pl-12 pr-6 py-4 font-bold text-base transition-all"
+                />
+              </div>
+              <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-xl">
+                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="text-sm text-muted-foreground">{email}</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 ml-auto">Read-only</span>
+              </div>
             </div>
             {msg.text && (
                 <div className={`p-3 rounded-2xl text-xs font-bold text-center ${msg.type === "error" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
@@ -91,9 +208,10 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
                 </div>
             )}
             <button disabled={loading} type="submit" className="primary-action w-full h-14">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save Settings"}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save Changes"}
             </button>
-        </form>
+          </form>
+        )}
       </section>
 
       {/* History */}
@@ -115,8 +233,15 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="font-extrabold text-foreground truncate">{report.issue_type}</span>
-                            <div className={`w-1.5 h-1.5 rounded-full ${report.status === 'resolved' ? 'bg-emerald-500' : 'bg-primary'}`} />
+                            <span className="font-extrabold text-foreground truncate">
+                                {report.status === 'REJECTED' ? (report.rejection_title || 'Rejected Report') : report.issue_type}
+                            </span>
+                            {report.priority && report.priority !== 'NONE' && (
+                              <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full text-white ${priorityColor(report.priority)}`}>
+                                {report.priority}
+                              </span>
+                            )}
+                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${report.status === 'resolved' || report.status === 'AUTHORITY_NOTIFIED' ? 'bg-emerald-500' : report.status === 'REJECTED' ? 'bg-red-500' : 'bg-primary'}`} />
                         </div>
                         <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(report.geotag_timestamp || report.created_at).toLocaleDateString()}</span>
@@ -136,4 +261,3 @@ export default function ProfileDashboard({ profile, reports }: { profile: Profil
     </div>
   );
 }
-

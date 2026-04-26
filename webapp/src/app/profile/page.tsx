@@ -37,7 +37,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <ProfileDashboard profile={profile || { id: user.id, full_name: user?.user_metadata?.full_name || "User", role: "citizen", avatar_url: null }} reports={reports || []} />
+      <ProfileDashboard profile={profile || { id: user.id, full_name: user?.user_metadata?.full_name || "User", role: "citizen", avatar_url: null, phone: null }} reports={reports || []} email={user.email || ""} />
     </div>
   );
 }

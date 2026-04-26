@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Mail, Lock, User, Loader2, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function AuthRegisterForm() {
   const supabase = createClient();
@@ -11,6 +11,7 @@ export default function AuthRegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -85,14 +86,22 @@ export default function AuthRegisterForm() {
         <div className="relative">
           <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full pl-14 pr-6 h-14 bg-secondary border-none rounded-2xl focus:ring-2 focus:ring-primary text-base font-medium placeholder:text-muted-foreground/40 transition-all"
+            className="w-full pl-14 pr-14 h-14 bg-secondary border-none rounded-2xl focus:ring-2 focus:ring-primary text-base font-medium placeholder:text-muted-foreground/40 transition-all"
             placeholder="••••••••  (min 6 characters)"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
         </div>
 
         <button
