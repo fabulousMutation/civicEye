@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+
 import Link from "next/link";
 import { Mail, Lock, Loader2, ArrowRight, Sparkles, Eye, EyeOff, AlertTriangle, RefreshCw } from "lucide-react";
 
@@ -66,7 +66,7 @@ function getFriendlyError(errorMessage: string): { title: string; message: strin
 }
 
 export default function AuthLoginForm() {
-  const router = useRouter();
+
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
