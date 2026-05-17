@@ -1,12 +1,13 @@
 {
-  "name": "CivicConnect - AI Citizen Reporting",
-  "short_name": "CivicConnect",
-  "description": "Progressive Web App for instantly reporting civic issues directly to local authorities.",
-  "theme_color": "#0b0f19",
-  "background_color": "#0b0f19",
+  "name": "CivicEye — AI-Powered Civic Reporting",
+  "short_name": "CivicEye",
+  "description": "Report civic issues with a photo. AI classifies, maps, and routes it to the right authority. Be the eye of your city.",
+  "theme_color": "#3B82F6",
+  "background_color": "#07070C",
   "display": "standalone",
   "orientation": "portrait",
   "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/favicon.ico",

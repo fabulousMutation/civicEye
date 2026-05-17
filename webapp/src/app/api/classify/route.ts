@@ -102,6 +102,9 @@ PRIORITY DEFINITIONS:
 
 If the image fails the Gatekeeper, reject it and provide a clear rejection reason.
 
+STEP 3: CONFIDENCE & AUTHENTICITY
+Assess your confidence in the classification and whether the image appears to be AI-generated or digitally manipulated.
+
 You MUST output ONLY a raw JSON object. DO NOT wrap the JSON in Markdown formatting (no \`\`\`json blocks).
 Your output must EXACTLY match the following structure:
 {
@@ -110,6 +113,8 @@ Your output must EXACTLY match the following structure:
   "rejection_reason": "string (null if valid. If rejected, clearly state the full explanation why, e.g., 'This appears to be a screenshot of a digital game, not a physical civic issue.')",
   "issue_type": "string (e.g., Pothole, Garbage, Violence, Vandalism, etc. Use null if rejected)",
   "priority": "string (must be one of: Low, Medium, High. Use 'NONE' if rejected)",
+  "confidence_score": number (0-100, your confidence in the classification accuracy. 90+ = very confident, 60-89 = moderately confident, below 60 = uncertain. Use 0 if rejected),
+  "ai_generated_likelihood": number (0-100, how likely the image is AI-generated or digitally fabricated. 0 = definitely real photo, 100 = definitely AI-generated. Look for telltale signs like perfect symmetry, unusual textures, floating objects, unnatural lighting),
   "tags": ["string", "string", "string"], // 3-5 descriptive keyword strings. Empty array if rejected
   "text_summary": "string (A professional, concise description suitable for an official report to authorities. Use null if rejected)"
 }`;
@@ -173,6 +178,22 @@ Your output must EXACTLY match the following structure:
     const supabaseServer = createClient();
     const { data: { user } } = await supabaseServer.auth.getUser();
 
+    // Rate limiting: max 5 reports per hour per user
+    if (user) {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await supabase
+        .from('reports')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('created_at', oneHourAgo);
+      if ((count || 0) >= 5) {
+        return NextResponse.json(
+          { success: false, error: 'Rate limit reached: maximum 5 reports per hour. Please try again later.' },
+          { status: 429 }
+        );
+      }
+    }
+
     // 7. Reverse geocode to get human-readable address
     const isRejected = classification.is_valid_civic_issue === false;
 
@@ -226,6 +247,24 @@ Your output must EXACTLY match the following structure:
       ? `REJECTED_ASSET_${tracingId}_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}`
       : null;
 
+    // 8b. Duplicate detection: look for reports within ~100m (~0.001 degrees)
+    let duplicates: unknown[] = [];
+    if (!isRejected && location?.lat && location?.lng) {
+      const latTol = 0.001; // ~111m
+      const lngTol = 0.001;
+      const { data: nearby } = await supabase
+        .from('reports')
+        .select('tracking_id, issue_type, priority, status, address, image_url, created_at')
+        .neq('status', 'REJECTED')
+        .gte('location_lat', location.lat - latTol)
+        .lte('location_lat', location.lat + latTol)
+        .gte('location_lng', location.lng - lngTol)
+        .lte('location_lng', location.lng + lngTol)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      duplicates = nearby || [];
+    }
+
     // 9. Database Interaction (Insert into Supabase)
     const { data: dbData, error: dbError } = await supabase
       .from('reports')
@@ -239,6 +278,8 @@ Your output must EXACTLY match the following structure:
           geotag_timestamp: timestamp || new Date().toISOString(),
           issue_type: isRejected ? rejectedAssetName : classification.issue_type,
           priority: isRejected ? 'NONE' : classification.priority,
+          confidence_score: classification.confidence_score || null,
+          ai_generated_likelihood: classification.ai_generated_likelihood || null,
           tags: isRejected ? [] : classification.tags,
           text_summary: isRejected ? classification.rejection_reason : classification.text_summary,
           status: isRejected ? 'REJECTED' : 'PENDING_REVIEW',
@@ -257,13 +298,33 @@ Your output must EXACTLY match the following structure:
       throw new Error('Failed to inject classification into the database.');
     }
 
+    // 10. Fire notification for the user (silent — don't fail main flow if this errors)
+    if (user) {
+      try {
+        await supabase.from('notifications').insert([{
+          user_id: user.id,
+          type: isRejected ? 'rejected' : 'report_submitted',
+          title: isRejected
+            ? `Submission Rejected: ${classification.rejection_title || 'Not a Civic Issue'}`
+            : `Report Submitted: ${classification.issue_type}`,
+          message: isRejected
+            ? (classification.rejection_reason || 'Your submission did not pass the AI gatekeeper.')
+            : `Your ${classification.priority} priority report has been logged and is under verification. Tracking ID: ${tracingId}`,
+          report_id: tracingId,
+        }]);
+      } catch (notifErr) {
+        console.warn('Notification insert skipped (table may not exist yet):', notifErr);
+      }
+    }
+
     // Return successful outcome to frontend
     return NextResponse.json({
       success: true,
       tracing_id: tracingId,
       classification,
       is_rejected: isRejected,
-      report: dbData
+      report: dbData,
+      duplicates,
     }, { status: 201 });
 
   } catch (error: unknown) {
